@@ -13,12 +13,12 @@ export const handler = async (event, context) => {
   // TODO: The following transactions should be atomic
   const usersToInsert = users.filter(user => user.createdAt === user.updatedAt)
   console.log(`${usersToInsert.length}/${users.length} users are created`)
-  await db.insertUsers(usersToInsert.map(u => utils.convertGraphUsreToDbUser(u)))
+  await db.insertUsers(usersToInsert.map(u => utils.convertGraphUserToDbUser(u)))
 
   const usersToUpdate = users.filter(user => user.createdAt !== user.updatedAt)
   console.log(`${usersToUpdate.length}/${users.length} users are updated`)
   for (const user of usersToUpdate) {
-    await db.updateOrInsertUser(utils.convertGraphUsreToDbUser(user))
+    await db.insertOrUpdateUser(utils.convertGraphUserToDbUser(user))
   }
 
   const deletedUsers = await graph.getDeletedUsers(latestUserUpdatedAt)

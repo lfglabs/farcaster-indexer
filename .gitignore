@@ -5,6 +5,7 @@ generated/
 
 # misc
 .DS_Store
+output.txt
 
 # debug
 npm-debug.log*
