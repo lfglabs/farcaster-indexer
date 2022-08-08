@@ -40,18 +40,6 @@ const convertToDbDirectory = (accountId, directory) => {
   }
 }
 
-const checkDirectoryEqual = (dir1, dir2) => {
-  return (
-    dir1.account === dir2.account &&
-    dir1.activity_url === dir2.activity_url &&
-    dir1.avatar_url === dir2.avatar_url &&
-    dir1.display_name === dir2.display_name &&
-    dir1.proof_url === dir2.proof_url &&
-    dir1.merkle_root === dir2.merkle_root &&
-    dir1.signature === dir2.signature
-  )
-}
-
 const convertToDbProof = (accountId, proof) => {
   const { signedMessage, signerAddress, farcasterAddress, originalMessage } =
     proof
@@ -63,16 +51,6 @@ const convertToDbProof = (accountId, proof) => {
     original_message: originalMessage || '',
     raw_data: proof,
   }
-}
-
-const checkProofEqual = (proof1, proof2) => {
-  return (
-    proof1.account === proof2.account &&
-    proof1.signed_message === proof2.signed_message &&
-    proof1.signer_address === proof2.signer_address &&
-    proof1.farcaster_address === proof2.farcaster_address &&
-    proof1.original_message === proof2.original_message
-  )
 }
 
 const _getRecastMerkleRoot = (text) => {
@@ -117,8 +95,6 @@ export default {
   fetchWithLog,
   convertGraphUserToDbUser,
   convertToDbDirectory,
-  checkDirectoryEqual,
   convertToDbProof,
-  checkProofEqual,
   convertToDbActivity,
 }

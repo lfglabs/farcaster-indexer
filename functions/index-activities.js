@@ -5,7 +5,7 @@ export const handler = async (event, context) => {
   for (const account of await db.getNextUsersToUpdateActivity()) {
     const { id, address, directories, latest_activity_sequence } = account
     const updates = {
-      address: address,
+      id: id,
       activity_updated_at: new Date().toISOString(),
     }
     if (!directories.length) {

@@ -99,17 +99,31 @@ const updateUser = async (user) => {
   const { error } = await supabase
     .from('accounts')
     .update(user)
-    .eq('address', user.address)
+    .eq('id', user.id)
   _checkError(error)
-  console.log(`Updated account ${user.address}`)
+  console.log(`Updated account ${user.id}`)
+}
+
+const updateUsers = async (update, accountIds) => {
+  const { data, error } = await supabase
+    .from('accounts')
+    .update(update)
+    .in('id', accountIds)
+  _checkError(error)
+  console.log(`Updated ${data.length} accounts`)
 }
 
 const insertOrUpdateUser = async (user) => {
   if (await _checkUserExists(user.address)) {
-    updateUser(user)
+    const { error } = await supabase
+      .from('accounts')
+      .update(user)
+      .eq('address', user.address)
+    _checkError(error)
+    console.log(`Updated account ${user.address}`)
   } else {
     await insertUsers([user])
-    console.log(`Inserted account ${user.username}`)
+    console.log(`Inserted account ${user.address}`)
   }
 }
 
@@ -126,78 +140,32 @@ const deleteUser = async (address, deletedAt) => {
   }
 }
 
-const _getDirectory = async (accountId) => {
-  const { data, error } = await supabase
+const upsertDirectories = async (directories) => {
+  if (!directories.length) return
+  const { error } = await supabase
     .from('directories')
-    .select()
-    .eq('account', accountId)
+    .upsert(directories, { onConflict: 'account', returning: 'minimal' })
   _checkError(error)
-  return data.length ? data[0] : null
+  console.log(`Upserted ${directories.length} directories`)
 }
 
-const insertDirectories = async (directories) => {
-  await _insert('directories', directories)
+const upsertProofs = async (proofs) => {
+  if (!proofs.length) return
+  const { error } = await supabase
+    .from('proofs')
+    .upsert(proofs, { onConflict: 'account', returning: 'minimal' })
+  _checkError(error)
+  console.log(`Upserted ${proofs.length} proofs`)
 }
 
-const insertOrUpdateDirectory = async (directory) => {
-  const curDirectory = await _getDirectory(directory.account)
-  if (curDirectory) {
-    if (!utils.checkDirectoryEqual(curDirectory, directory)) {
-      const { error } = await supabase
-        .from('directories')
-        .update(directory)
-        .eq('account', directory.account)
-      _checkError(error)
-      console.log(`Updated directory for account ${directory.account}`)
-    }
-  } else {
-    insertDirectories([directory])
-  }
-}
-
-const _getProof = async (accountId) => {
+const deleteProofs = async (accountIds) => {
+  if (!accountIds.length) return
   const { data, error } = await supabase
     .from('proofs')
-    .select()
-    .eq('account', accountId)
+    .delete()
+    .in('account', accountIds)
   _checkError(error)
-  return data.length ? data[0] : null
-}
-
-const insertProofs = async (proofs) => {
-  await _insert('proofs', proofs)
-}
-
-const insertOrUpdateProof = async (proof) => {
-  const curProof = await _getProof(proof.account)
-  if (curProof) {
-    if (!utils.checkProofEqual(curProof, proof)) {
-      const { error } = await supabase
-        .from('proofs')
-        .update(proof)
-        .eq('account', proof.account)
-      _checkError(error)
-      console.log(`Updated proof for account ${proof.account}`)
-    }
-  } else {
-    insertProofs([proof])
-  }
-}
-
-const deleteProof = async (accountId) => {
-  const proof = await _getProof(accountId)
-  if (proof) {
-    const { error } = await supabase
-      .from('proofs')
-      .delete()
-      .eq('account', accountId)
-    _checkError(error)
-    console.log(`Deleted proof for account ${accountId}`)
-  } else {
-    console.warn(
-      `Could not delete proof: No record found for account ${accountId}`
-    )
-  }
+  console.log(`Deleted ${data.length} proofs`)
 }
 
 const insertActivities = async (activities) => {
@@ -252,11 +220,12 @@ export default {
   getLatestUserDeletedAt,
   insertUsers,
   updateUser,
+  updateUsers,
   insertOrUpdateUser,
   deleteUser,
-  insertOrUpdateDirectory,
-  insertOrUpdateProof,
-  deleteProof,
+  upsertDirectories,
+  upsertProofs,
+  deleteProofs,
   insertActivities,
   markActivityAsDeleted,
   updateReplyToActivity,
