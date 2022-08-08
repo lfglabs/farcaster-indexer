@@ -21,6 +21,7 @@ export const handler = async (event, context) => {
     if (activities) {
       const activitiesToInsert = []
       const deletedActivities = {}
+      let prevSequence = null
       for (const rawActivity of activities) {
         const activity = utils.convertToDbActivity(id, rawActivity)
         const { sequence, merkle_root, delete_merkle_root } = activity
@@ -30,6 +31,12 @@ export const handler = async (event, context) => {
         if (sequence === latest_activity_sequence) {
           break
         }
+        // Some activity JSON files have multiple items with the same sequence number
+        // e.g., https://gist.githubusercontent.com/gsgalloway/0a922a4fab3127404bded802fcde80b2/raw/activity.json
+        // We skip earlier ones in those cases.
+        if (sequence === prevSequence) {
+          continue
+        }
         if (delete_merkle_root) {
           deletedActivities[delete_merkle_root] = true
         }
@@ -38,6 +45,7 @@ export const handler = async (event, context) => {
           delete deletedActivities[merkle_root]
         }
         activitiesToInsert.push(activity)
+        prevSequence = sequence
       }
       // Mark activities that are already in DB as deleted
       for (const merkleRootToDelete of Object.keys(deletedActivities)) {
