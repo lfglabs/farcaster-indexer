@@ -228,6 +228,23 @@ const markActivityAsDeleted = async (accountId, merkleRoot) => {
   }
 }
 
+/*
+CREATE FUNCTION update_reply_to_activity() RETURNS void AS $$
+  update activities as a1
+  set reply_to = (
+    select a2.id from activities as a2 where a2.merkle_root = a1.reply_parent_merkle_root order by a2.published_at asc limit 1
+  )
+  where reply_parent_merkle_root != '' and reply_to is null
+$$ LANGUAGE SQL;
+*/
+const updateReplyToActivity = async () => {
+  const { error } = await supabase.rpc('update_reply_to_activity')
+  _checkError(error)
+  console.log(
+    'Updated reply_to field of activities via the update_reply_to_activity RPC call'
+  )
+}
+
 export default {
   getNextUsersToUpdateDirectory,
   getNextUsersToUpdateActivity,
@@ -242,4 +259,5 @@ export default {
   deleteProof,
   insertActivities,
   markActivityAsDeleted,
+  updateReplyToActivity,
 }
