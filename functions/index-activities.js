@@ -19,6 +19,8 @@ export const handler = async (event, context) => {
     // We could not index all activities for the following accounts that had more than
     // 5000 activities: @dwr.
     const activities = await utils.fetchWithLog(directories[0].activity_url)
+    // We currently assume changes in content hosted on activity URLs are backwards compatible.
+    // EX: sequence is always increasing vs. decreasing.
     if (activities) {
       const activitiesToInsert = []
       const deletedActivities = {}
