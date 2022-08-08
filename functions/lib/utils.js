@@ -10,14 +10,7 @@ const fetchWithLog = async (url) => {
     return await res.json()
   } catch (e) {
     console.warn(`Could not fetch ${url}: ${e.message}`)
-    // We can safely skip the following error cases
-    if (
-      e.name === 'SyntaxError' || // invalid JSON
-      e.message === 'The upstream server is timing out'
-    ) {
-      return null
-    }
-    throw e
+    return null
   }
 }
 

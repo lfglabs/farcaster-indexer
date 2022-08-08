@@ -40,13 +40,13 @@ const getNextUsersToUpdateDirectory = async () => {
   return data
 }
 
-// Update 300 users at a time to avoid AWS Lambda timeout
+// Update 200 users at a time to avoid AWS Lambda timeout
 const getNextUsersToUpdateActivity = async () => {
   const { data, error } = await _defaultUserSelect(
     'id, address, latest_activity_sequence, directories (activity_url)'
   )
     .order('activity_updated_at', { ascending: true, nullsFirst: true })
-    .limit(300)
+    .limit(200)
   _checkError(error)
   return data
 }

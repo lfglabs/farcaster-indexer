@@ -13,7 +13,7 @@ export const handler = async (event, context) => {
       continue
     }
 
-    console.log(`Updating activities for account ${address}`)
+    console.log(`Updating activities for account ${id}`)
     // TODO: https://guardian.farcaster.xyz/origin/address_activity
     // Currently returns up to 5000 latest activities and does not seem to support pagination.
     // We could not index all activities for the following accounts that had more than
@@ -37,6 +37,9 @@ export const handler = async (event, context) => {
         // e.g., https://gist.githubusercontent.com/gsgalloway/0a922a4fab3127404bded802fcde80b2/raw/activity.json
         // We skip earlier ones in those cases.
         if (sequence === prevSequence) {
+          console.warn(
+            `Skipping duplicate sequence ${sequence} for account ${id} (prevSequence: ${prevSequence})`
+          )
           continue
         }
         if (delete_merkle_root) {
