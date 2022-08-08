@@ -28,7 +28,7 @@ const _defaultUserSelect = (fields) => {
     .from('accounts')
     .select(fields)
     .not('url', 'like', '%://localhost%')
-    .not('username', 'like', '__tt_%')
+    .not('username', 'like', '\\_\\_tt\\_%')
 }
 
 // Update 200 users at a time to avoid AWS Lambda timeout
