@@ -1,16 +1,20 @@
 import fetch from 'node-fetch'
 
 const fetchWithLog = async (url) => {
-  const res = await fetch(url)
-  if (!res.ok) {
-    console.warn(`Could not fetch ${url}: ${res.statusText}`)
-    return null
-  }
   try {
+    const res = await fetch(url)
+    if (!res.ok) {
+      console.warn(`Could not fetch ${url}: ${res.statusText}`)
+      return null
+    }
     return await res.json()
   } catch (e) {
-    if (e.name === 'SyntaxError') {
-      // Some directory or activity URLs point to non JSON file
+    console.warn(`Could not fetch ${url}: ${e.message}`)
+    // We can safely skip the following error cases
+    if (
+      e.name === 'SyntaxError' || // invalid JSON
+      e.message === 'The upstream server is timing out'
+    ) {
       return null
     }
     throw e

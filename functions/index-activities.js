@@ -12,6 +12,7 @@ export const handler = async (event, context) => {
       await db.updateUser(updates)
       continue
     }
+
     console.log(`Updating activities for account ${address}`)
     // TODO: https://guardian.farcaster.xyz/origin/address_activity
     // Currently returns up to 5000 latest activities and does not seem to support pagination.
@@ -28,6 +29,7 @@ export const handler = async (event, context) => {
         if (updates.latest_activity_sequence === undefined) {
           updates.latest_activity_sequence = sequence
         }
+        // Already indexed
         if (sequence === latest_activity_sequence) {
           break
         }
