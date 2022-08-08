@@ -7,7 +7,7 @@ export const handler = async (event, context) => {
     if (!directories.length) {
       await db.updateUser({
         address: address,
-        activity_updated_at: (new Date()).toISOString(),
+        activity_updated_at: new Date().toISOString(),
       })
       continue
     }
@@ -23,7 +23,7 @@ export const handler = async (event, context) => {
     if (activities) {
       for (const rawActivity of activities) {
         const activity = utils.convertToDbActivity(id, rawActivity)
-        const {sequence, merkle_root, delete_merkle_root} = activity
+        const { sequence, merkle_root, delete_merkle_root } = activity
         if (sequence === latest_activity_sequence) {
           break
         }
@@ -42,7 +42,7 @@ export const handler = async (event, context) => {
     }
     // Mark activities that are already in DB as deleted
     for (const merkleRootToDelete of Object.keys(deletedActivities)) {
-      await db.markActivityAsDeleted(id, merkleRootToDelete);
+      await db.markActivityAsDeleted(id, merkleRootToDelete)
     }
 
     await db.insertActivities(activitiesToInsert)
@@ -50,7 +50,7 @@ export const handler = async (event, context) => {
     await db.updateUser({
       address: address,
       latest_activity_sequence: latestActivitySequence,
-      activity_updated_at: (new Date()).toISOString(),
+      activity_updated_at: new Date().toISOString(),
     })
   }
 }

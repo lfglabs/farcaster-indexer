@@ -9,7 +9,7 @@ const fetchWithLog = async (url) => {
   try {
     return await res.json()
   } catch (e) {
-    if (e.name === "SyntaxError") {
+    if (e.name === 'SyntaxError') {
       // Some directory or activity URLs point to non JSON file
       return null
     }
@@ -56,7 +56,8 @@ const checkDirectoryEqual = (dir1, dir2) => {
 }
 
 const convertToDbProof = (accountId, proof) => {
-  const { signedMessage, signerAddress, farcasterAddress, originalMessage } = proof
+  const { signedMessage, signerAddress, farcasterAddress, originalMessage } =
+    proof
   return {
     account: accountId,
     signed_message: signedMessage || '',
@@ -82,7 +83,7 @@ const _getRecastMerkleRoot = (text) => {
   if (parts.length > 1) {
     return parts[1]
   }
-  return '';
+  return ''
 }
 
 const _getDeleteMerkleRoot = (text) => {
@@ -90,7 +91,7 @@ const _getDeleteMerkleRoot = (text) => {
   if (parts.length > 1) {
     return parts[1]
   }
-  return '';
+  return ''
 }
 
 const convertToDbActivity = (accountId, activity) => {
@@ -99,7 +100,7 @@ const convertToDbActivity = (accountId, activity) => {
     account: accountId,
     merkle_root: merkleRoot || '',
     signature: signature || '',
-    published_at:  body.publishedAt,
+    published_at: body.publishedAt,
     sequence: body.sequence,
     text: body.data.text || '',
     reply_parent_merkle_root: body.data.replyParentMerkleRoot || '',

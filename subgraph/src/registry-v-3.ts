@@ -1,12 +1,12 @@
-import { BigInt, store } from "@graphprotocol/graph-ts"
+import { BigInt, store } from '@graphprotocol/graph-ts'
 import {
   RegistryV3,
   DeregisterName,
   ModifyName,
   RegisterName,
   TransferName,
-} from "../generated/RegistryV3/RegistryV3"
-import { DeletedUser, User } from "../generated/schema"
+} from '../generated/RegistryV3/RegistryV3'
+import { DeletedUser, User } from '../generated/schema'
 
 export function handleRegisterName(event: RegisterName): void {
   let contract = RegistryV3.bind(event.address)
@@ -48,7 +48,9 @@ export function handleDeregisterName(event: DeregisterName): void {
   let id = username.toString()
   let user = User.load(id)
   if (user) {
-    let deleted = new DeletedUser(event.transaction.hash.toHex() + "-" + event.logIndex.toString())
+    let deleted = new DeletedUser(
+      event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+    )
     deleted.username = user.username
     deleted.address = user.address
     deleted.deletedAt = event.block.timestamp

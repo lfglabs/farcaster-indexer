@@ -7,7 +7,9 @@ export const handler = async (event, context) => {
     console.log(`Updating directory for account ${address}`)
     const directory = await utils.fetchWithLog(url)
     if (directory) {
-      await db.insertOrUpdateDirectory(utils.convertToDbDirectory(id, directory))
+      await db.insertOrUpdateDirectory(
+        utils.convertToDbDirectory(id, directory)
+      )
       const proof = await utils.fetchWithLog(directory.body.proofUrl)
       if (proof) {
         await db.insertOrUpdateProof(utils.convertToDbProof(id, proof))
@@ -15,6 +17,9 @@ export const handler = async (event, context) => {
         await db.deleteProof(id)
       }
     }
-    await db.updateUser({ address: address, directory_updated_at: (new Date()).toISOString() })
+    await db.updateUser({
+      address: address,
+      directory_updated_at: new Date().toISOString(),
+    })
   }
 }

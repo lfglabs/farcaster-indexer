@@ -11,11 +11,17 @@ export const handler = async (event, context) => {
   const users = await graph.getUsers(latestUserUpdatedAt)
 
   // TODO: The following transactions should be atomic
-  const usersToInsert = users.filter(user => user.createdAt === user.updatedAt)
+  const usersToInsert = users.filter(
+    (user) => user.createdAt === user.updatedAt
+  )
   console.log(`${usersToInsert.length}/${users.length} users are created`)
-  await db.insertUsers(usersToInsert.map(u => utils.convertGraphUserToDbUser(u)))
+  await db.insertUsers(
+    usersToInsert.map((u) => utils.convertGraphUserToDbUser(u))
+  )
 
-  const usersToUpdate = users.filter(user => user.createdAt !== user.updatedAt)
+  const usersToUpdate = users.filter(
+    (user) => user.createdAt !== user.updatedAt
+  )
   console.log(`${usersToUpdate.length}/${users.length} users are updated`)
   for (const user of usersToUpdate) {
     await db.insertOrUpdateUser(utils.convertGraphUserToDbUser(user))
