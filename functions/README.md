@@ -21,6 +21,7 @@ output.txt
 
 # Deploy
 1. Login to AWS ERC: `aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 985583747716.dkr.ecr.us-east-2.amazonaws.com`
+1. Build the Docker image: `docker build -t lambda-index-fc-users --build-arg MAIN=index-users.js .`
 1. Create a tag: `docker tag lambda-index-fc-users:latest 985583747716.dkr.ecr.us-east-2.amazonaws.com/lambda-index-fc-users:latest`
 1. Push the latest image to our ERC repo: `docker push 985583747716.dkr.ecr.us-east-2.amazonaws.com/lambda-index-fc-users:latest`
 1. For other functions, replace `lambda-index-fc-users` and `index-users.js` with the corresponding name.

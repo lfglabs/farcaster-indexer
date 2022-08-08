@@ -1,3 +1,22 @@
+import fetch from 'node-fetch'
+
+const fetchWithLog = async (url) => {
+  const res = await fetch(url)
+  if (!res.ok) {
+    console.warn(`Could not fetch ${url}: ${res.statusText}`)
+    return null
+  }
+  try {
+    return await res.json()
+  } catch (e) {
+    if (e.name === "SyntaxError") {
+      // Some directory or activity URLs point to non JSON file
+      return null
+    }
+    throw e
+  }
+}
+
 const convertGraphUserToDbUser = (user) => {
   return {
     username: user.id,
@@ -58,10 +77,50 @@ const checkProofEqual = (proof1, proof2) => {
   )
 }
 
+const _getRecastMerkleRoot = (text) => {
+  const parts = text.split('recast:farcaster://casts/')
+  if (parts.length > 1) {
+    return parts[1]
+  }
+  return '';
+}
+
+const _getDeleteMerkleRoot = (text) => {
+  const parts = text.split('delete:farcaster://casts/')
+  if (parts.length > 1) {
+    return parts[1]
+  }
+  return '';
+}
+
+const convertToDbActivity = (accountId, activity) => {
+  const { body, merkleRoot, signature, meta } = activity
+  return {
+    account: accountId,
+    merkle_root: merkleRoot || '',
+    signature: signature || '',
+    published_at:  body.publishedAt,
+    sequence: body.sequence,
+    text: body.data.text || '',
+    reply_parent_merkle_root: body.data.replyParentMerkleRoot || '',
+    prev_merkle_root: body.prevMerkleRoot || '',
+    recast_merkle_root: _getRecastMerkleRoot(body.data.text),
+    delete_merkle_root: _getDeleteMerkleRoot(body.data.text),
+    num_reply_children: meta?.numReplyChildren || 0,
+    reactions_count: meta?.reactions?.count || 0,
+    recasts_count: meta?.recasts?.count || 0,
+    watches_count: meta?.watches?.count || 0,
+    deleted: false,
+    raw_data: activity,
+  }
+}
+
 export default {
+  fetchWithLog,
   convertGraphUserToDbUser,
   convertToDbDirectory,
   checkDirectoryEqual,
   convertToDbProof,
   checkProofEqual,
+  convertToDbActivity,
 }
