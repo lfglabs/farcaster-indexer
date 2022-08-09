@@ -14,14 +14,14 @@ const fetchWithLog = async (url) => {
   }
 }
 
-const convertGraphUserToDbUser = (user) => {
+const convertGraphAccountToDbAccount = (account) => {
   return {
-    username: user.id,
-    address: user.address,
-    url: user.url,
-    initialized: user.initialized,
-    entry_created_at: parseInt(user.createdAt),
-    entry_updated_at: parseInt(user.updatedAt),
+    username: account.id,
+    address: account.address,
+    url: account.url,
+    initialized: account.initialized,
+    entry_created_at: parseInt(account.createdAt),
+    entry_updated_at: parseInt(account.updatedAt),
   }
 }
 
@@ -94,7 +94,7 @@ const convertToDbActivity = (accountId, activity) => {
 
 export default {
   fetchWithLog,
-  convertGraphUserToDbUser,
+  convertGraphAccountToDbAccount,
   convertToDbDirectory,
   convertToDbProof,
   convertToDbActivity,

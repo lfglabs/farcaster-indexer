@@ -31,7 +31,7 @@ const _queryAllRows = async (query, tableName) => {
   return res
 }
 
-const getUsers = async (updatedSince) => {
+const getAccounts = async (updatedSince) => {
   const query = `
     query($skip: Int) {
       users(first: ${PAGE_SIZE}, skip: $skip, where: {updatedAt_gt: ${updatedSince}}, orderBy: updatedAt, orderDirection: asc) {
@@ -58,7 +58,7 @@ const getUsers = async (updatedSince) => {
   return users
 }
 
-const getDeletedUsers = async (deletedSince) => {
+const getDeletedAccounts = async (deletedSince) => {
   const query = `
     query($skip: Int) {
       deletedUsers(first: ${PAGE_SIZE}, skip: $skip, where: {deletedAt_gt: ${deletedSince}}, orderBy: deletedAt, orderDirection: asc) {
@@ -76,4 +76,4 @@ const getDeletedUsers = async (deletedSince) => {
   return users
 }
 
-export default { getUsers, getDeletedUsers }
+export default { getAccounts, getDeletedAccounts }

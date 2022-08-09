@@ -13,7 +13,7 @@ const _checkError = (error) => {
   }
 }
 
-const _defaultUserSelect = (fields) => {
+const _defaultAccountSelect = (fields) => {
   // Test accounts uses localhost and/or starts with __tt_
   return supabase
     .from('accounts')
@@ -22,18 +22,18 @@ const _defaultUserSelect = (fields) => {
     .not('username', 'like', '\\_\\_tt\\_%')
 }
 
-// Update 200 users at a time to avoid AWS Lambda timeout
-const getNextUsersToUpdateDirectory = async () => {
-  const { data, error } = await _defaultUserSelect('id, address, url')
+// Update 200 accounts at a time to avoid AWS Lambda timeout
+const getNextAccountsToUpdateDirectory = async () => {
+  const { data, error } = await _defaultAccountSelect('id, address, url')
     .order('directory_updated_at', { ascending: true, nullsFirst: true })
     .limit(200)
   _checkError(error)
   return data
 }
 
-// Update 200 users at a time to avoid AWS Lambda timeout
-const getNextUsersToUpdateActivity = async () => {
-  const { data, error } = await _defaultUserSelect(
+// Update 200 accounts at a time to avoid AWS Lambda timeout
+const getNextAccountsToUpdateActivity = async () => {
+  const { data, error } = await _defaultAccountSelect(
     'id, address, latest_activity_sequence, directories (activity_url)'
   )
     .order('activity_updated_at', { ascending: true, nullsFirst: true })
@@ -42,7 +42,7 @@ const getNextUsersToUpdateActivity = async () => {
   return data
 }
 
-const getLatestUserUpdatedAt = async () => {
+const getLatestAccountUpdatedAt = async () => {
   const { data, error } = await supabase
     .from('accounts')
     .select()
@@ -52,7 +52,7 @@ const getLatestUserUpdatedAt = async () => {
   return data.length ? data[0].entry_updated_at : 0
 }
 
-const getLatestUserDeletedAt = async () => {
+const getLatestAccountDeletedAt = async () => {
   const { data, error } = await supabase
     .from('accounts')
     .select()
@@ -63,14 +63,14 @@ const getLatestUserDeletedAt = async () => {
   return data.length ? data[0].entry_deleted_at : 0
 }
 
-const insertUsers = async (users) => {
-  if (!users.length) return
-  const { error } = await supabase.from(accounts).insert(users)
+const insertAccounts = async (accounts) => {
+  if (!accounts.length) return
+  const { error } = await supabase.from(accounts).insert(accounts)
   _checkError(error)
-  console.log(`Inserted ${users.length} accounts`)
+  console.log(`Inserted ${accounts.length} accounts`)
 }
 
-const _getUser = async (address, createdAt) => {
+const _getAccount = async (address, createdAt) => {
   const { data, error } = await supabase
     .from('accounts')
     .select()
@@ -80,7 +80,7 @@ const _getUser = async (address, createdAt) => {
   return data.length ? data[0] : null
 }
 
-const _checkUserExists = async (address) => {
+const _checkAccountExists = async (address) => {
   const { count, error } = await supabase
     .from('accounts')
     .select('*', { count: 'exact', head: true })
@@ -89,16 +89,16 @@ const _checkUserExists = async (address) => {
   return count > 0
 }
 
-const updateUser = async (user) => {
+const updateAccount = async (account) => {
   const { error } = await supabase
     .from('accounts')
-    .update(user)
-    .eq('id', user.id)
+    .update(account)
+    .eq('id', account.id)
   _checkError(error)
-  console.log(`Updated account ${user.id}`)
+  console.log(`Updated account ${account.id}`)
 }
 
-const updateUsers = async (update, accountIds) => {
+const updateAccounts = async (update, accountIds) => {
   const { data, error } = await supabase
     .from('accounts')
     .update(update)
@@ -107,26 +107,26 @@ const updateUsers = async (update, accountIds) => {
   console.log(`Updated ${data.length} accounts`)
 }
 
-const insertOrUpdateUser = async (user) => {
-  if (await _checkUserExists(user.address)) {
+const insertOrUpdateAccount = async (account) => {
+  if (await _checkAccountExists(account.address)) {
     const { error } = await supabase
       .from('accounts')
-      .update(user)
-      .eq('address', user.address)
+      .update(account)
+      .eq('address', account.address)
     _checkError(error)
-    console.log(`Updated account ${user.address}`)
+    console.log(`Updated account ${account.address}`)
   } else {
-    await insertUsers([user])
-    console.log(`Inserted account ${user.address}`)
+    await insertAccounts([account])
+    console.log(`Inserted account ${account.address}`)
   }
 }
 
-const deleteUser = async (address, deletedAt) => {
-  const user = await _getUser(address, deletedAt)
-  if (user) {
-    const { error } = await supabase.from('accounts').delete().eq('id', user.id)
+const deleteAccount = async (address, deletedAt) => {
+  const account = await _getAccount(address, deletedAt)
+  if (account) {
+    const { error } = await supabase.from('accounts').delete().eq('id', account.id)
     _checkError(error)
-    console.log(`Deleted account ${user.username}`)
+    console.log(`Deleted account ${account.username}`)
   } else {
     console.warn(
       `Could not delete account: No record found with address ${address}`
@@ -229,15 +229,15 @@ const updateReplyToActivity = async () => {
 }
 
 export default {
-  getNextUsersToUpdateDirectory,
-  getNextUsersToUpdateActivity,
-  getLatestUserUpdatedAt,
-  getLatestUserDeletedAt,
-  insertUsers,
-  updateUser,
-  updateUsers,
-  insertOrUpdateUser,
-  deleteUser,
+  getNextAccountsToUpdateDirectory,
+  getNextAccountsToUpdateActivity,
+  getLatestAccountUpdatedAt,
+  getLatestAccountDeletedAt,
+  insertAccounts,
+  updateAccount,
+  updateAccounts,
+  insertOrUpdateAccount,
+  deleteAccount,
   upsertDirectories,
   upsertProofs,
   deleteProofs,

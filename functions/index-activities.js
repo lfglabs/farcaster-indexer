@@ -7,10 +7,10 @@ const REINDEX_UP_TO_MOST_RECENT = 50
 export const handler = async (event, context) => {
   console.log('Start indexing activities')
   const timestampUpdate = { activity_updated_at: new Date().toISOString() }
-  const usersToUpdate = []
-  for (const account of await db.getNextUsersToUpdateActivity()) {
+  const accountsToUpdate = []
+  for (const account of await db.getNextAccountsToUpdateActivity()) {
     const { id, directories, latest_activity_sequence } = account
-    usersToUpdate.push(id)
+    accountsToUpdate.push(id)
     if (!directories.length) {
       continue
     }
@@ -60,8 +60,8 @@ export const handler = async (event, context) => {
       await db.upsertActivities(activitiesToUpsert)
     }
   }
-  await db.updateUsers(timestampUpdate, usersToUpdate)
-  await db.updateLatestActivitySequence(usersToUpdate)
+  await db.updateAccounts(timestampUpdate, accountsToUpdate)
+  await db.updateLatestActivitySequence(accountsToUpdate)
   await db.updateReplyToActivity()
   console.log('Done indexing activities.')
 }

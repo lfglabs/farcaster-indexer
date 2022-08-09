@@ -7,9 +7,9 @@ export const handler = async (event, context) => {
   const directoriesToUpsert = []
   const proofsToUpsert = []
   const proofsToDelete = []
-  const usersToUpdate = []
-  for (const user of await db.getNextUsersToUpdateDirectory()) {
-    const { id, url } = user
+  const accountsToUpdate = []
+  for (const account of await db.getNextAccountsToUpdateDirectory()) {
+    const { id, url } = account
     console.log(`Processing account ${id}`)
     const directory = await utils.fetchWithLog(url)
     if (directory) {
@@ -21,11 +21,11 @@ export const handler = async (event, context) => {
         proofsToDelete.push(id)
       }
     }
-    usersToUpdate.push(id)
+    accountsToUpdate.push(id)
   }
   await db.upsertDirectories(directoriesToUpsert)
   await db.upsertProofs(proofsToUpsert)
   await db.deleteProofs(proofsToDelete)
-  await db.updateUsers(timestampUpdate, usersToUpdate)
+  await db.updateAccounts(timestampUpdate, accountsToUpdate)
   console.log('Done indexing directories.')
 }
