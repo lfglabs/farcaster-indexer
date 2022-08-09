@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import utils from './utils.js'
 
 const supabase = createClient(
   process.env['SUPABASE_URL'],
@@ -24,7 +23,7 @@ const _defaultAccountSelect = (fields) => {
 
 // Update 200 accounts at a time to avoid AWS Lambda timeout
 const getNextAccountsToUpdateDirectory = async () => {
-  const { data, error } = await _defaultAccountSelect('id, address, url')
+  const { data, error } = await _defaultAccountSelect('id, url')
     .order('directory_updated_at', { ascending: true, nullsFirst: true })
     .limit(200)
   _checkError(error)
@@ -34,7 +33,7 @@ const getNextAccountsToUpdateDirectory = async () => {
 // Update 200 accounts at a time to avoid AWS Lambda timeout
 const getNextAccountsToUpdateActivity = async () => {
   const { data, error } = await _defaultAccountSelect(
-    'id, address, latest_activity_sequence, directories (activity_url)'
+    'id, latest_activity_sequence, directories (activity_url)'
   )
     .order('activity_updated_at', { ascending: true, nullsFirst: true })
     .limit(200)
@@ -124,7 +123,10 @@ const insertOrUpdateAccount = async (account) => {
 const deleteAccount = async (address, deletedAt) => {
   const account = await _getAccount(address, deletedAt)
   if (account) {
-    const { error } = await supabase.from('accounts').delete().eq('id', account.id)
+    const { error } = await supabase
+      .from('accounts')
+      .delete()
+      .eq('id', account.id)
     _checkError(error)
     console.log(`Deleted account ${account.username}`)
   } else {
@@ -134,22 +136,21 @@ const deleteAccount = async (address, deletedAt) => {
   }
 }
 
-const upsertDirectories = async (directories) => {
-  if (!directories.length) return
+const _upsert = async (tableName, items, onConflict) => {
+  if (!items.length) return
   const { error } = await supabase
-    .from('directories')
-    .upsert(directories, { onConflict: 'account', returning: 'minimal' })
+    .from(tableName)
+    .upsert(items, { onConflict: onConflict, returning: 'minimal' })
   _checkError(error)
-  console.log(`Upserted ${directories.length} directories`)
+  console.log(`Upserted ${items.length} ${tableName}`)
+}
+
+const upsertDirectories = async (directories) => {
+  _upsert('directories', directories, 'account')
 }
 
 const upsertProofs = async (proofs) => {
-  if (!proofs.length) return
-  const { error } = await supabase
-    .from('proofs')
-    .upsert(proofs, { onConflict: 'account', returning: 'minimal' })
-  _checkError(error)
-  console.log(`Upserted ${proofs.length} proofs`)
+  _upsert('proofs', proofs, 'account')
 }
 
 const deleteProofs = async (accountIds) => {
@@ -162,14 +163,12 @@ const deleteProofs = async (accountIds) => {
   console.log(`Deleted ${data.length} proofs`)
 }
 
+const upsertProfiles = async (profiles) => {
+  _upsert('profiles', profiles, 'account')
+}
+
 const upsertActivities = async (activities) => {
-  if (!activities.length) return
-  const { error } = await supabase.from('activities').upsert(activities, {
-    onConflict: 'account, sequence',
-    returning: 'minimal',
-  })
-  _checkError(error)
-  console.log(`Upserted ${activities.length} activities`)
+  _upsert('activities', activities, 'account, sequence')
 }
 
 const markActivitiesAsDeleted = async (accountId, merkleRoots) => {
@@ -241,6 +240,7 @@ export default {
   upsertDirectories,
   upsertProofs,
   deleteProofs,
+  upsertProfiles,
   upsertActivities,
   markActivitiesAsDeleted,
   updateLatestActivitySequence,

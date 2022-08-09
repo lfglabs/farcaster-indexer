@@ -53,6 +53,16 @@ const convertToDbProof = (accountId, proof) => {
   }
 }
 
+const convertToDbProfile = (accountId, profile) => {
+  const { user, followStats } = profile
+  return {
+    account: accountId,
+    bio: user?.profile?.bio?.text || '',
+    num_followers: followStats?.numFollowers || 0,
+    num_following: followStats?.numFollowing || 0,
+  }
+}
+
 const _getRecastMerkleRoot = (text) => {
   const parts = text.split('recast:farcaster://casts/')
   if (parts.length > 1) {
@@ -97,5 +107,6 @@ export default {
   convertGraphAccountToDbAccount,
   convertToDbDirectory,
   convertToDbProof,
+  convertToDbProfile,
   convertToDbActivity,
 }
