@@ -1,19 +1,20 @@
 import db from './lib/db.js'
 import utils from './lib/utils.js'
 
+// Reindex up to most recent 50 activities in case metrics have changed
+const REINDEX_UP_TO_MOST_RECENT = 50
+
 export const handler = async (event, context) => {
+  console.log('Start indexing activities')
+  const timestampUpdate = { activity_updated_at: new Date().toISOString() }
+  const usersToUpdate = []
   for (const account of await db.getNextUsersToUpdateActivity()) {
-    const { id, address, directories, latest_activity_sequence } = account
-    const updates = {
-      id: id,
-      activity_updated_at: new Date().toISOString(),
-    }
+    const { id, directories, latest_activity_sequence } = account
+    usersToUpdate.push(id)
     if (!directories.length) {
-      await db.updateUser(updates)
       continue
     }
-
-    console.log(`Updating activities for account ${id}`)
+    console.log(`Indexing activities for account ${id}`)
     // TODO: https://guardian.farcaster.xyz/origin/address_activity
     // Currently returns up to 5000 latest activities and does not seem to support pagination.
     // We could not index all activities for the following accounts that had more than
@@ -22,17 +23,17 @@ export const handler = async (event, context) => {
     // We currently assume changes in content hosted on activity URLs are backwards compatible.
     // EX: sequence is always increasing vs. decreasing.
     if (activities) {
-      const activitiesToInsert = []
+      const activitiesToUpsert = []
       const deletedActivities = {}
       let prevSequence = null
       for (const rawActivity of activities) {
         const activity = utils.convertToDbActivity(id, rawActivity)
         const { sequence, merkle_root, delete_merkle_root } = activity
-        if (updates.latest_activity_sequence === undefined) {
-          updates.latest_activity_sequence = sequence
-        }
-        // Already indexed
-        if (sequence === latest_activity_sequence) {
+        if (
+          latest_activity_sequence !== null && // Index all if not indexed yet
+          sequence <= latest_activity_sequence &&
+          activitiesToUpsert.length >= REINDEX_UP_TO_MOST_RECENT
+        ) {
           break
         }
         // Some activity JSON files have multiple items with the same sequence number
@@ -51,16 +52,16 @@ export const handler = async (event, context) => {
           activity.deleted = true
           delete deletedActivities[merkle_root]
         }
-        activitiesToInsert.push(activity)
+        activitiesToUpsert.push(activity)
         prevSequence = sequence
       }
       // Mark activities that are already in DB as deleted
-      for (const merkleRootToDelete of Object.keys(deletedActivities)) {
-        await db.markActivityAsDeleted(id, merkleRootToDelete)
-      }
-      await db.insertActivities(activitiesToInsert)
+      await db.markActivitiesAsDeleted(id, Object.keys(deletedActivities))
+      await db.upsertActivities(activitiesToUpsert)
     }
-    await db.updateUser(updates)
   }
+  await db.updateUsers(timestampUpdate, usersToUpdate)
+  await db.updateLatestActivitySequence(usersToUpdate)
   await db.updateReplyToActivity()
+  console.log('Done indexing activities.')
 }

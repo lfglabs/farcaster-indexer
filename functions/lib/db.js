@@ -13,15 +13,6 @@ const _checkError = (error) => {
   }
 }
 
-const _insert = async (tableName, items) => {
-  if (!items.length) {
-    return
-  }
-  const { error } = await supabase.from(tableName).insert(items)
-  _checkError(error)
-  console.log(`Inserted ${items.length} ${tableName}`)
-}
-
 const _defaultUserSelect = (fields) => {
   // Test accounts uses localhost and/or starts with __tt_
   return supabase
@@ -73,7 +64,10 @@ const getLatestUserDeletedAt = async () => {
 }
 
 const insertUsers = async (users) => {
-  await _insert('accounts', users)
+  if (!users.length) return
+  const { error } = await supabase.from(accounts).insert(users)
+  _checkError(error)
+  console.log(`Inserted ${users.length} accounts`)
 }
 
 const _getUser = async (address, createdAt) => {
@@ -168,32 +162,53 @@ const deleteProofs = async (accountIds) => {
   console.log(`Deleted ${data.length} proofs`)
 }
 
-const insertActivities = async (activities) => {
-  await _insert('activities', activities)
-}
-
-const _checkActivityExists = async (accountId, merkleRoot) => {
-  const { count, error } = await supabase
-    .from('activities')
-    .select('*', { count: 'exact', head: true })
-    .match({ account: accountId, merkle_root: merkleRoot })
+const upsertActivities = async (activities) => {
+  if (!activities.length) return
+  const { error } = await supabase.from('activities').upsert(activities, {
+    onConflict: 'account, sequence',
+    returning: 'minimal',
+  })
   _checkError(error)
-  return count > 0
+  console.log(`Upserted ${activities.length} activities`)
 }
 
-const markActivityAsDeleted = async (accountId, merkleRoot) => {
-  if (await _checkActivityExists(accountId, merkleRoot)) {
-    const { error } = await supabase
-      .from('activities')
-      .update({ deleted: true })
-      .match({ account: accountId, merkle_root: merkleRoot })
-    _checkError(error)
-    console.log(`Marked the following activity as deleted: ${merkleRoot}`)
-  } else {
+const markActivitiesAsDeleted = async (accountId, merkleRoots) => {
+  if (!merkleRoots.length) return
+  const { data, error } = await supabase
+    .from('activities')
+    .update({ deleted: true })
+    .eq('account', accountId) // Only can delete own activities
+    .in('merkle_root', merkleRoots)
+  _checkError(error)
+  if (data.length < merkleRoots.length) {
     console.warn(
-      `Could not find activity to mark as deleted: ${accountId} ${merkleRoot}`
+      `Could not find ${
+        merkleRoots.length - data.length
+      } activities to mark as deleted`
     )
   }
+  console.log(
+    `Marked ${data.length} activities as deleted for account ${accountId}`
+  )
+}
+
+/*
+CREATE FUNCTION update_latest_activity_sequence(account_ids int[]) RETURNS void AS $$
+    UPDATE accounts AS a
+    SET latest_activity_sequence = (
+      SELECT max(sequence) FROM activities WHERE a.id = account
+    )
+    WHERE a.id = ANY(account_ids)
+$$ language sql;
+*/
+const updateLatestActivitySequence = async (accountIds) => {
+  const { error } = await supabase.rpc('update_latest_activity_sequence', {
+    account_ids: accountIds,
+  })
+  _checkError(error)
+  console.log(
+    `Updated latest_activity_sequence field of ${accountIds.length} accounts via the update_latest_activity_sequence RPC call`
+  )
 }
 
 /*
@@ -226,7 +241,8 @@ export default {
   upsertDirectories,
   upsertProofs,
   deleteProofs,
-  insertActivities,
-  markActivityAsDeleted,
+  upsertActivities,
+  markActivitiesAsDeleted,
+  updateLatestActivitySequence,
   updateReplyToActivity,
 }

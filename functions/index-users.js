@@ -7,6 +7,7 @@ import fetch from 'node-fetch'
 globalThis.fetch = fetch
 
 export const handler = async (event, context) => {
+  console.log('Start indexing accounts')
   const latestUserUpdatedAt = await db.getLatestUserUpdatedAt()
   const users = await graph.getUsers(latestUserUpdatedAt)
 
@@ -40,4 +41,5 @@ export const handler = async (event, context) => {
   for (const user of deletedUsers) {
     await db.deleteUser(user.address, parseInt(user.deletedAt))
   }
+  console.log('Done indexing accounts.')
 }

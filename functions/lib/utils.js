@@ -63,7 +63,8 @@ const _getRecastMerkleRoot = (text) => {
 
 const _getDeleteMerkleRoot = (text) => {
   const parts = text.split('delete:farcaster://casts/')
-  if (parts.length > 1) {
+  // Prevent delete:farcaster://casts/undefined to get through
+  if (parts.length > 1 && parts[1] !== 'undefined') {
     return parts[1]
   }
   return ''
