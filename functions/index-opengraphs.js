@@ -3,6 +3,9 @@ import urlRegex from 'url-regex'
 import db from './lib/db.js'
 import utils from './lib/utils.js'
 
+const URLS_TO_SKIP = [
+  'https://i.imgur.com/', // Farcaster uses imgur as image hosting service.
+]
 const SCRAPE_ERRORS_TO_IGNORE = [
   'Page not found',
   'Must scrape an HTML page',
@@ -36,6 +39,7 @@ export const handler = async (event, context) => {
       console.log(`Found ${urls.length} urls in activity ${activity.id}`)
       const opengraphsToUpsert = []
       for (const url of urls) {
+        if (URLS_TO_SKIP.some((domain) => url.startsWith(domain))) continue
         try {
           const { result } = await ogs({
             url: url,
