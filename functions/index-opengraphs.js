@@ -14,16 +14,17 @@ const SCRAPE_ERRORS_TO_IGNORE = [
   'connect ECONNREFUSED',
   'self signed certificate',
   'write EPROTO',
+  'Web server is returning error',
 ]
 const ERRORS_TO_RETRY_LATER = [
   'Time out',
   'Client network socket disconnected before secure TLS connection was established',
-  'Web server is returning error',
 ]
 // open graph scraper options:
 // https://www.npmjs.com/package/open-graph-scraper
 // Maximum size of the content downloaded from the server, in bytes
 const SCRAPE_DOWNLOAD_LIMIT = 10000000 // 10MB
+const TIMEOUT = 3000 // 3 seconds
 
 const URL_REGEX = urlRegex()
 
@@ -50,6 +51,7 @@ export const handler = async (event, context) => {
           const { result } = await ogs({
             url: url,
             downloadLimit: SCRAPE_DOWNLOAD_LIMIT,
+            timeout: TIMEOUT,
           })
           const opengraph = utils.convertToDbOpengraph(result)
           if (!normalizedUrls.has(opengraph.normalized_url)) {
