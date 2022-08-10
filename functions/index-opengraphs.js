@@ -3,9 +3,6 @@ import urlRegex from 'url-regex'
 import db from './lib/db.js'
 import utils from './lib/utils.js'
 
-const URLS_TO_SKIP = [
-  'https://i.imgur.com/', // Farcaster uses imgur as image hosting service.
-]
 const SCRAPE_ERRORS_TO_IGNORE = [
   'Page not found',
   'Must scrape an HTML page',
@@ -31,7 +28,11 @@ const SCRAPE_DOWNLOAD_LIMIT = 10000000 // 10MB
 const URL_REGEX = urlRegex()
 
 const extractUrls = (text) => {
-  const urls = text.match(URL_REGEX) || []
+  // Farcaster uses imgur as image hosting service.
+  const urls =
+    text
+      .match(URL_REGEX)
+      ?.filter((url) => !url.startsWith('https://i.imgur.com/')) || []
   return new Set(urls.map((url) => url.trim().replace(/\.+$/, '')))
 }
 
@@ -42,19 +43,17 @@ export const handler = async (event, context) => {
       const urls = extractUrls(activity.text)
       console.log(`Found ${urls.size} urls in activity ${activity.id}`)
       const opengraphsToUpsert = []
+      const normalizedUrls = new Set()
       for (const url of urls) {
-        if (URLS_TO_SKIP.some((domain) => url.startsWith(domain))) continue
         try {
+          console.log(`Scraping ${url}`)
           const { result } = await ogs({
             url: url,
             downloadLimit: SCRAPE_DOWNLOAD_LIMIT,
           })
           const opengraph = utils.convertToDbOpengraph(result)
-          if (
-            !opengraphsToUpsert.some(
-              (o) => o.normalized_url === opengraph.normalized_url
-            )
-          ) {
+          if (!normalizedUrls.has(opengraph.normalized_url)) {
+            normalizedUrls.add(opengraph.normalized_url)
             opengraphsToUpsert.push(opengraph)
           }
         } catch (e) {
@@ -71,7 +70,11 @@ export const handler = async (event, context) => {
       }
       await db.upsertOpengraphs(activity.id, opengraphsToUpsert)
     } catch (e) {
-      if (!ERRORS_TO_RETRY_LATER.includes(e.result?.error)) {
+      if (ERRORS_TO_RETRY_LATER.includes(e.result?.error)) {
+        console.warn(
+          `Retrying ${activity.id} later due to the following error: ${e.result?.error}`
+        )
+      } else {
         console.error(`Could not index opengraphs for activity ${activity.id}`)
         console.error(e)
       }

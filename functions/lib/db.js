@@ -255,6 +255,7 @@ const upsertOpengraphs = async (activityId, opengraphs) => {
       .from('activities_opengraphs')
       .insert({ activity: activityId, opengraph: null })
     _checkError(error)
+    console.log(`Marked activity ${activityId} as scraped`)
   }
 }
 
