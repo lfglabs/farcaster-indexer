@@ -13,6 +13,8 @@ const SCRAPE_ERRORS_TO_IGNORE = [
   'certificate has expired',
   'Hostname/IP does not match certificate',
   'Invalid URL',
+  'Response code 999 (Request denied)',
+  'connect ECONNREFUSED',
 ]
 const ERRORS_TO_RETRY_LATER = [
   'Time out',
