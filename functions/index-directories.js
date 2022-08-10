@@ -2,6 +2,12 @@ import db from './lib/db.js'
 import fc from './lib/farcaster-api.js'
 import utils from './lib/utils.js'
 
+const extractAddressFromDirectoryUrl = (url) => {
+  // Ex: https://guardian.farcaster.xyz/origin/directory/0x2cf0b72866F4e51A7C35a02998B5E66896ee2c50
+  const parts = url.split('guardian.farcaster.xyz/origin/directory/')
+  return parts.length > 1 ? parts[1] : null
+}
+
 export const handler = async (event, context) => {
   console.log('Start indexing directories')
   const timestampUpdate = { directory_updated_at: new Date().toISOString() }
@@ -16,18 +22,23 @@ export const handler = async (event, context) => {
     const directory = await utils.fetchWithLog(url)
     if (directory) {
       directoriesToUpsert.push(utils.convertToDbDirectory(id, directory))
+      // Using farcaster address from proof or directory url
+      // because graph lowercases account addresses and the
+      // profile URL is case sensitive.
+      let caseSensitiveAddress
       const proof = await utils.fetchWithLog(directory.body.proofUrl)
       if (proof) {
         proofsToUpsert.push(utils.convertToDbProof(id, proof))
-        // Using farcaster address from proof because graph lowercases
-        // account addresses and the URL is case sensitive.
-        // TODO: account address should be cased properly.
-        const profile = await fc.getProfile(proof.farcasterAddress)
+        caseSensitiveAddress = proof.farcasterAddress
+      } else {
+        proofsToDelete.push(id)
+        caseSensitiveAddress = extractAddressFromDirectoryUrl(url)
+      }
+      if (caseSensitiveAddress) {
+        const profile = await fc.getProfile(caseSensitiveAddress)
         if (profile) {
           profilesToUpsert.push(utils.convertToDbProfile(id, profile))
         }
-      } else {
-        proofsToDelete.push(id)
       }
     }
     accountsToUpdate.push(id)
