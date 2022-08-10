@@ -242,7 +242,7 @@ const upsertOpengraphs = async (activityId, opengraphs) => {
     const { data } = await _upsert(
       'opengraphs',
       opengraphs,
-      'scraped_url',
+      'normalized_url',
       'representation'
     )
     const manyToMany = data.map((og) => {

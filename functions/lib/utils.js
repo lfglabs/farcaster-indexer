@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+import normalizeUrl from 'normalize-url'
 
 const fetchWithLog = async (url) => {
   try {
@@ -105,9 +106,11 @@ const convertToDbActivity = (accountId, activity) => {
 const convertToDbOpengraph = (opengraph) => {
   const { requestUrl, ogTitle, ogType, ogUrl, ogDescription, ogImage } =
     opengraph
+  const normalizedUrl = normalizeUrl(requestUrl, { forceHttps: true })
   return {
-    scraped_url: requestUrl || '',
-    domain: new URL(requestUrl).hostname || '',
+    normalized_url: normalizedUrl,
+    scraped_url: requestUrl,
+    domain: new URL(normalizedUrl).hostname || '',
     url: ogUrl || '',
     type: ogType || '',
     title: ogTitle || '',
