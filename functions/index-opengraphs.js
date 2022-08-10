@@ -9,6 +9,7 @@ const SCRAPE_ERRORS_TO_IGNORE = [
   'Page must return a header content-type with text/html',
   'certificate has expired',
   'Hostname/IP does not match certificate',
+  'Invalid URL',
 ]
 const ERRORS_TO_RETRY_LATER = [
   'Time out',
