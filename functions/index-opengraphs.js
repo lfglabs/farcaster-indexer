@@ -15,6 +15,8 @@ const SCRAPE_ERRORS_TO_IGNORE = [
   'Invalid URL',
   'Response code 999 (Request denied)',
   'connect ECONNREFUSED',
+  'self signed certificate',
+  'write EPROTO',
 ]
 const ERRORS_TO_RETRY_LATER = [
   'Time out',
@@ -30,7 +32,7 @@ const URL_REGEX = urlRegex()
 
 const extractUrls = (text) => {
   const urls = text.match(URL_REGEX) || []
-  return urls.map((url) => url.trim().replace(/\.+$/, ''))
+  return new Set(urls.map((url) => url.trim().replace(/\.+$/, '')))
 }
 
 export const handler = async (event, context) => {
@@ -38,7 +40,7 @@ export const handler = async (event, context) => {
   for (const activity of await db.getNextActivitiesToUpdateIndexOpengraphs()) {
     try {
       const urls = extractUrls(activity.text)
-      console.log(`Found ${urls.length} urls in activity ${activity.id}`)
+      console.log(`Found ${urls.size} urls in activity ${activity.id}`)
       const opengraphsToUpsert = []
       for (const url of urls) {
         if (URLS_TO_SKIP.some((domain) => url.startsWith(domain))) continue
@@ -47,7 +49,14 @@ export const handler = async (event, context) => {
             url: url,
             downloadLimit: SCRAPE_DOWNLOAD_LIMIT,
           })
-          opengraphsToUpsert.push(utils.convertToDbOpengraph(result))
+          const opengraph = utils.convertToDbOpengraph(result)
+          if (
+            !opengraphsToUpsert.some(
+              (o) => o.normalized_url === opengraph.normalized_url
+            )
+          ) {
+            opengraphsToUpsert.push(opengraph)
+          }
         } catch (e) {
           if (
             SCRAPE_ERRORS_TO_IGNORE.some((msg) =>
