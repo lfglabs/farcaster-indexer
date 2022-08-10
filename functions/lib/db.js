@@ -64,7 +64,7 @@ const getLatestAccountDeletedAt = async () => {
 
 const insertAccounts = async (accounts) => {
   if (!accounts.length) return
-  const { error } = await supabase.from(accounts).insert(accounts)
+  const { error } = await supabase.from('accounts').insert(accounts)
   _checkError(error)
   console.log(`Inserted ${accounts.length} accounts`)
 }
@@ -136,21 +136,22 @@ const deleteAccount = async (address, deletedAt) => {
   }
 }
 
-const _upsert = async (tableName, items, onConflict) => {
-  if (!items.length) return
-  const { error } = await supabase
+const _upsert = async (tableName, items, onConflict, returning = 'minimal') => {
+  if (!items.length) return { data: [] }
+  const { data, error } = await supabase
     .from(tableName)
-    .upsert(items, { onConflict: onConflict, returning: 'minimal' })
+    .upsert(items, { onConflict: onConflict, returning: returning })
   _checkError(error)
   console.log(`Upserted ${items.length} ${tableName}`)
+  return { data }
 }
 
 const upsertDirectories = async (directories) => {
-  _upsert('directories', directories, 'account')
+  return _upsert('directories', directories, 'account')
 }
 
 const upsertProofs = async (proofs) => {
-  _upsert('proofs', proofs, 'account')
+  return _upsert('proofs', proofs, 'account')
 }
 
 const deleteProofs = async (accountIds) => {
@@ -164,11 +165,11 @@ const deleteProofs = async (accountIds) => {
 }
 
 const upsertProfiles = async (profiles) => {
-  _upsert('profiles', profiles, 'account')
+  return _upsert('profiles', profiles, 'account')
 }
 
 const upsertActivities = async (activities) => {
-  _upsert('activities', activities, 'account, sequence')
+  return _upsert('activities', activities, 'account, sequence')
 }
 
 const markActivitiesAsDeleted = async (accountId, merkleRoots) => {
@@ -227,6 +228,36 @@ const updateReplyToActivity = async () => {
   )
 }
 
+const getNextActivitiesToUpdateIndexOpengraphs = async () => {
+  const { data, error } = await supabase
+    .rpc('select_activities_to_index_opengraphs')
+    .order('published_at', { ascending: true })
+    .limit(300)
+  _checkError(error)
+  return data
+}
+
+const upsertOpengraphs = async (activityId, opengraphs) => {
+  if (opengraphs.length) {
+    const { data } = await _upsert(
+      'opengraphs',
+      opengraphs,
+      'scraped_url',
+      'representation'
+    )
+    const manyToMany = data.map((og) => {
+      return { activity: activityId, opengraph: og.id }
+    })
+    return _upsert('activities_opengraphs', manyToMany, 'activity, opengraph')
+  } else {
+    // Insert an entry with opengraph null indicates opengraphs were scraped but empty
+    const { error } = await supabase
+      .from('activities_opengraphs')
+      .insert({ activity: activityId, opengraph: null })
+    _checkError(error)
+  }
+}
+
 export default {
   getNextAccountsToUpdateDirectory,
   getNextAccountsToUpdateActivity,
@@ -245,4 +276,6 @@ export default {
   markActivitiesAsDeleted,
   updateLatestActivitySequence,
   updateReplyToActivity,
+  getNextActivitiesToUpdateIndexOpengraphs,
+  upsertOpengraphs,
 }

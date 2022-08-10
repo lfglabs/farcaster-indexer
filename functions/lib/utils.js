@@ -102,6 +102,21 @@ const convertToDbActivity = (accountId, activity) => {
   }
 }
 
+const convertToDbOpengraph = (opengraph) => {
+  const { requestUrl, ogTitle, ogType, ogUrl, ogDescription, ogImage } =
+    opengraph
+  return {
+    scraped_url: requestUrl || '',
+    domain: new URL(requestUrl).hostname || '',
+    url: ogUrl || '',
+    type: ogType || '',
+    title: ogTitle || '',
+    description: ogDescription || '',
+    image: ogImage || null,
+    raw_data: opengraph,
+  }
+}
+
 export default {
   fetchWithLog,
   convertGraphAccountToDbAccount,
@@ -109,4 +124,5 @@ export default {
   convertToDbProof,
   convertToDbProfile,
   convertToDbActivity,
+  convertToDbOpengraph,
 }
