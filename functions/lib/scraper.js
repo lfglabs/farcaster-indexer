@@ -30,8 +30,8 @@ const TEMP_ERRORS = [
 // open graph scraper options:
 // https://www.npmjs.com/package/open-graph-scraper
 // Maximum size of the content downloaded from the server, in bytes
-const SCRAPE_DOWNLOAD_LIMIT = 10000000 // 10MB
-const TIMEOUT = 3000 // 3 seconds
+const SCRAPE_DOWNLOAD_LIMIT = 20000000 // 10MB
+const TIMEOUT = 10000 // 10 seconds
 
 const URL_REGEX = urlRegex()
 
