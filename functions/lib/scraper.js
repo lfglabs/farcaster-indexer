@@ -25,6 +25,7 @@ const TEMP_ERRORS = [
   'socket hang up',
   'Time out',
   'Client network socket disconnected before secure TLS connection was established',
+  'Exceeded the download limit of',
 ]
 // open graph scraper options:
 // https://www.npmjs.com/package/open-graph-scraper
