@@ -1,85 +1,44 @@
-import ogs from 'open-graph-scraper'
-import urlRegex from 'url-regex'
 import db from './lib/db.js'
+import scraper from './lib/scraper.js'
 import utils from './lib/utils.js'
-
-const SCRAPE_ERRORS_TO_IGNORE = [
-  'Page not found',
-  'Must scrape an HTML page',
-  'Page must return a header content-type with text/html',
-  'certificate has expired',
-  'Hostname/IP does not match certificate',
-  'Invalid URL',
-  'Response code 999 (Request denied)',
-  'connect ECONNREFUSED',
-  'self signed certificate',
-  'write EPROTO',
-  'Web server is returning error',
-]
-const ERRORS_TO_RETRY_LATER = [
-  'Time out',
-  'Client network socket disconnected before secure TLS connection was established',
-]
-// open graph scraper options:
-// https://www.npmjs.com/package/open-graph-scraper
-// Maximum size of the content downloaded from the server, in bytes
-const SCRAPE_DOWNLOAD_LIMIT = 10000000 // 10MB
-const TIMEOUT = 3000 // 3 seconds
-
-const URL_REGEX = urlRegex()
-
-const extractUrls = (text) => {
-  // Farcaster uses imgur as image hosting service.
-  const urls =
-    text
-      .match(URL_REGEX)
-      ?.filter((url) => !url.startsWith('https://i.imgur.com/')) || []
-  return new Set(urls.map((url) => url.trim().replace(/\.+$/, '')))
-}
 
 export const handler = async (event, context) => {
   console.log('Start indexing urls')
   for (const activity of await db.getNextActivitiesToUpdateIndexOpengraphs()) {
     try {
-      const urls = extractUrls(activity.text)
+      const urls = scraper.extractUrls(activity.text)
       console.log(`Found ${urls.size} urls in activity ${activity.id}`)
       const opengraphsToUpsert = []
       const normalizedUrls = new Set()
       for (const url of urls) {
         try {
-          console.log(`Scraping ${url}`)
-          const { result } = await ogs({
-            url: url,
-            downloadLimit: SCRAPE_DOWNLOAD_LIMIT,
-            timeout: TIMEOUT,
-          })
+          const { result } = await scraper.getOpengraph(url)
           const opengraph = utils.convertToDbOpengraph(result)
           if (!normalizedUrls.has(opengraph.normalized_url)) {
             normalizedUrls.add(opengraph.normalized_url)
             opengraphsToUpsert.push(opengraph)
           }
         } catch (e) {
-          if (
-            SCRAPE_ERRORS_TO_IGNORE.some((msg) =>
-              e.result?.error?.startsWith(msg)
+          if (e instanceof scraper.PermanentError) {
+            console.warn(
+              `Skipping ${url} due to the following error: ${e.message}`
             )
-          ) {
-            console.warn(`Could not scrape ${url}: ${e.result?.error}`)
-          } else {
-            throw e
+            continue
           }
+          throw e
         }
       }
       await db.upsertOpengraphs(activity.id, opengraphsToUpsert)
     } catch (e) {
-      if (ERRORS_TO_RETRY_LATER.includes(e.result?.error)) {
+      // Simply skip this activity and retry later
+      if (e instanceof scraper.TemporaryError) {
         console.warn(
-          `Retrying ${activity.id} later due to the following error: ${e.result?.error}`
+          `Retrying ${activity.id} later due to the following error: ${e.message}`
         )
-      } else {
-        console.error(`Could not index opengraphs for activity ${activity.id}`)
-        console.error(e)
+        continue
       }
+      console.error(`Unknown error scraping ${activity.id}: ${e.message}`)
+      throw e
     }
   }
   console.log('Done indexing urls.')
