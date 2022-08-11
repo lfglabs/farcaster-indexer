@@ -1,8 +1,14 @@
 import ogs from 'open-graph-scraper'
 import urlRegex from 'url-regex'
+import utils from './utils.js'
 
 class PermanentError extends Error {}
 class TemporaryError extends Error {}
+
+// Farcaster uses imgur as image hosting service.
+const isValidOpengraphUrl = (url) => {
+  return url && !url.startsWith('https://i.imgur.com/')
+}
 
 // We don't want to retry if we get these errors.
 const PERMANENT_ERRORS = [
@@ -37,22 +43,19 @@ const TIMEOUT = 10000 // 10 seconds
 const URL_REGEX = urlRegex()
 
 const extractUrls = (text) => {
-  // Farcaster uses imgur as image hosting service.
-  const urls =
-    text
-      .match(URL_REGEX)
-      ?.filter((url) => !url.startsWith('https://i.imgur.com/')) || []
+  const urls = text.match(URL_REGEX)?.filter(isValidOpengraphUrl) || []
   return new Set(urls.map((url) => url.trim().replace(/\.+$/, '')))
 }
 
-const getOpengraph = async (url) => {
+const getOpengraphFromUrl = async (url) => {
   try {
     console.log(`Scraping ${url}`)
-    return await ogs({
+    const { result } = await ogs({
       url: url,
       downloadLimit: SCRAPE_DOWNLOAD_LIMIT,
       timeout: TIMEOUT,
     })
+    return utils.convertToDbOpengraph(result)
   } catch (e) {
     const errorMsg = e.result?.error
     if (errorMsg) {
@@ -67,9 +70,19 @@ const getOpengraph = async (url) => {
   }
 }
 
+const getOpengraphsFromActivity = (activity) => {
+  const { raw_data } = activity
+  return (
+    raw_data?.attachments?.openGraph
+      ?.filter((og) => isValidOpengraphUrl(og.url))
+      .map(utils.convertToDbOpengraph) || []
+  )
+}
+
 export default {
   PermanentError,
   TemporaryError,
   extractUrls,
-  getOpengraph,
+  getOpengraphFromUrl,
+  getOpengraphsFromActivity,
 }

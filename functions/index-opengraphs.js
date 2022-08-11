@@ -1,25 +1,28 @@
 import db from './lib/db.js'
 import scraper from './lib/scraper.js'
-import utils from './lib/utils.js'
 
 export const handler = async (event, context) => {
   console.log('Start indexing urls')
   for (const activity of await db.getNextActivitiesToUpdateIndexOpengraphs()) {
+    const errors = []
     try {
-      const urls = scraper.extractUrls(activity.text)
-      console.log(`Found ${urls.size} urls in activity ${activity.id}`)
+      // Get the opengraphs from the activity text
+      const urlsInActivityText = scraper.extractUrls(activity.text)
+      console.log(
+        `Found ${urlsInActivityText.size} urls in activity's text ${activity.id}`
+      )
       const opengraphsToUpsert = []
       const normalizedUrls = new Set()
-      for (const url of urls) {
+      for (const url of urlsInActivityText) {
         try {
-          const { result } = await scraper.getOpengraph(url)
-          const opengraph = utils.convertToDbOpengraph(result)
+          const opengraph = await scraper.getOpengraphFromUrl(url)
           if (!normalizedUrls.has(opengraph.normalized_url)) {
             normalizedUrls.add(opengraph.normalized_url)
             opengraphsToUpsert.push(opengraph)
           }
         } catch (e) {
           if (e instanceof scraper.PermanentError) {
+            errors.push(e.message)
             console.warn(
               `Skipping ${url} due to the following error: ${e.message}`
             )
@@ -28,10 +31,23 @@ export const handler = async (event, context) => {
           throw e
         }
       }
+      // Get the opengraphs from the activity opengraphs
+      const urlsInActivityOpengraphs =
+        scraper.getOpengraphsFromActivity(activity)
+      console.log(
+        `Found ${urlsInActivityOpengraphs.length} urls in activity's opengraphs ${activity.id}`
+      )
+      for (const url of urlsInActivityOpengraphs) {
+        if (!normalizedUrls.has(url.normalized_url)) {
+          normalizedUrls.add(url.normalized_url)
+          opengraphsToUpsert.push(url)
+        }
+      }
       await db.upsertOpengraphs(activity.id, opengraphsToUpsert)
     } catch (e) {
       // Simply skip this activity and retry later
       if (e instanceof scraper.TemporaryError) {
+        errors.push(e.message)
         console.warn(
           `Retrying ${activity.id} later due to the following error: ${e.message}`
         )
@@ -39,6 +55,12 @@ export const handler = async (event, context) => {
       }
       console.error(`Unknown error scraping ${activity.id}: ${e.message}`)
       throw e
+    }
+    if (errors.length) {
+      db.getNextActivitiesToUpdateIndexOpengraphs(
+        activity.id,
+        errors.join('\n')
+      )
     }
   }
   console.log('Done indexing urls.')

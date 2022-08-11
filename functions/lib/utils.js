@@ -103,20 +103,41 @@ const convertToDbActivity = (accountId, activity) => {
   }
 }
 
+const normalizeUrlWithHttps = (url) => {
+  return normalizeUrl(url, { forceHttps: true })
+}
+
 const convertToDbOpengraph = (opengraph) => {
-  const { requestUrl, ogTitle, ogType, ogUrl, ogDescription, ogImage } =
-    opengraph
-  const normalizedUrl = normalizeUrl(requestUrl, { forceHttps: true })
-  return {
-    normalized_url: normalizedUrl,
-    scraped_url: requestUrl,
-    domain: new URL(normalizedUrl).hostname || '',
-    url: ogUrl || '',
-    type: ogType || '',
-    title: ogTitle || '',
-    description: ogDescription || '',
-    image: ogImage || null,
-    raw_data: opengraph,
+  if (opengraph.requestUrl) {
+    // Extracted using open-graph-scraper
+    const { requestUrl, ogTitle, ogType, ogUrl, ogDescription, ogImage } =
+      opengraph
+    const normalizedUrl = normalizeUrlWithHttps(requestUrl)
+    return {
+      normalized_url: normalizedUrl,
+      scraped_url: requestUrl,
+      domain: new URL(normalizedUrl).hostname || '',
+      url: ogUrl || '',
+      type: ogType || '',
+      title: ogTitle || '',
+      description: ogDescription || '',
+      image: ogImage || null,
+      raw_data: opengraph,
+    }
+  } else {
+    // From activity
+    const normalizedUrl = normalizeUrlWithHttps(opengraph.url)
+    return {
+      normalized_url: normalizedUrl,
+      scraped_url: opengraph.url,
+      domain: new URL(normalizedUrl).hostname || '',
+      url: opengraph.url || '',
+      type: '',
+      title: opengraph.title || '',
+      description: opengraph.description || '',
+      image: opengraph.image ? { url: opengraph.image || '' } : null,
+      raw_data: opengraph,
+    }
   }
 }
 
@@ -128,4 +149,5 @@ export default {
   convertToDbProfile,
   convertToDbActivity,
   convertToDbOpengraph,
+  normalizeUrlWithHttps,
 }

@@ -17,14 +17,16 @@ export const handler = async (event, context) => {
   //    will be skipped because deleted timestamp is after created timestamp on the account.
   // 2) Username is already in DB: We fail in this case becase we attempt to insert an account
   //    with the same username that is already in the DB.
-  // TODO: We should handle the case #2 gracefully.
+  // TODO: We should handle the case #2 gracefully instead of manually deleting the account.
   // TODO: The following transactions should be atomic, e.g., if this function fails after
   // insert but before completing the update/delete, retrying this function will fail with
   // conflict during the insert step.
   const accountsToInsert = accounts.filter(
     (account) => account.createdAt === account.updatedAt
   )
-  console.log(`${accountsToInsert.length}/${accounts.length} accounts are created`)
+  console.log(
+    `${accountsToInsert.length}/${accounts.length} accounts are created`
+  )
   await db.insertAccounts(
     accountsToInsert.map((u) => utils.convertGraphAccountToDbAccount(u))
   )
@@ -32,9 +34,13 @@ export const handler = async (event, context) => {
   const accountsToUpdate = accounts.filter(
     (account) => account.createdAt !== account.updatedAt
   )
-  console.log(`${accountsToUpdate.length}/${accounts.length} accounts are updated`)
+  console.log(
+    `${accountsToUpdate.length}/${accounts.length} accounts are updated`
+  )
   for (const account of accountsToUpdate) {
-    await db.insertOrUpdateAccount(utils.convertGraphAccountToDbAccount(account))
+    await db.insertOrUpdateAccount(
+      utils.convertGraphAccountToDbAccount(account)
+    )
   }
 
   const deletedAccounts = await graph.getDeletedAccounts(latestAccountUpdatedAt)

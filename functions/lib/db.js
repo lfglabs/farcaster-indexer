@@ -231,7 +231,7 @@ const updateReplyToActivity = async () => {
 const getNextActivitiesToUpdateIndexOpengraphs = async () => {
   const { data, error } = await supabase
     .rpc('select_activities_to_index_opengraphs')
-    .order('published_at', { ascending: true })
+    .order('published_at', { ascending: false })
     .limit(300)
   _checkError(error)
   return data
@@ -259,6 +259,15 @@ const upsertOpengraphs = async (activityId, opengraphs) => {
   }
 }
 
+const updateOpengraphIndexingErrors = async (activityId, errors) => {
+  const { error } = await supabase
+    .from('activities')
+    .update({ opengraph_indexing_errors: errors })
+    .eq('id', activityId)
+  _checkError(error)
+  console.log(`Logged opengraph indexing errors for activity ${activityId}`)
+}
+
 export default {
   getNextAccountsToUpdateDirectory,
   getNextAccountsToUpdateActivity,
@@ -279,4 +288,5 @@ export default {
   updateReplyToActivity,
   getNextActivitiesToUpdateIndexOpengraphs,
   upsertOpengraphs,
+  updateOpengraphIndexingErrors,
 }
