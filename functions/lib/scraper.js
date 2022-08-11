@@ -17,8 +17,9 @@ const PERMANENT_ERRORS = [
   'self signed certificate',
   'write EPROTO',
   'Web server is returning error',
-  "Encoding not recognized: 'utf' (searched as: 'utf')",
+  'Encoding not recognized:',
   'unable to verify the first certificate',
+  'Protocol ', // Protocol not supported
 ]
 // We want to retry if we get these errors.
 const TEMP_ERRORS = [
