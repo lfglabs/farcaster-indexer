@@ -2,7 +2,7 @@
 
 This software indexes [Farcaster](https://farcaster.xyz) data into a Supabase database. The primary purpose of the database is to serve [Farcaster News](https://www.farcasternews.xyz).
 
-We are opening up read-only access to the database to the public with the hope of accelerating permissionless innovation on Farcaster Protocol by making it easy to start a new project. We don't provide an SLA and strongly encourage you to run your own indexer and database once your project takes off.
+We are opening read-only database access to the public with the hope of accelerating permissionless innovation on the Farcaster Protocol by making it easy to start a new project. We don't provide an SLA and strongly encourage you to run your own indexer and database once your project takes off.
 
 ## Accessing our database
 
@@ -11,11 +11,11 @@ You can use [the Supabase client](https://supabase.com/docs/reference/javascript
 - Project URL: `https://kpwbglpxjuhiqtgtvenz.supabase.co`
 - API key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwd2JnbHB4anVoaXF0Z3R2ZW56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NTgzNzg2MjEsImV4cCI6MTk3Mzk1NDYyMX0.zecokpSRK0MI_nOaSAgFZJCMkPSpEXraPKqQD5fogE4`
 
-Following views are available: `account_view`, `activity_view` and `activity_opengraph_view`, `opengraph_view`. Note that we don't currently verify signatures.
+The following views are available: `account_view`, `activity_view` and `activity_opengraph_view`, `opengraph_view`. Note that we don't currently verify signatures.
 
 ### account_view
 
-We check updates to [Farcaster name registry](https://www.farcaster.xyz/docs/the-basics#name-registry) every 5 minutes and reflect user registrations, username transfer, and directory URL changes to our database. We scrape directory, proof, and profile URLs at 4000 accounts per hour in case there are updates.
+We check updates to [Farcaster name registry](https://www.farcaster.xyz/docs/the-basics#name-registry) every 5 minutes and reflect user registrations, username transfer, and directory URL changes to our database. We scrape directory, proof, and profile URLs at the rate of 4000 accounts per hour in case there are updates.
 
 The following fields are available in `account_view`:
 
@@ -46,12 +46,12 @@ The following fields are available in `account_view`:
 
 ### activity_view
 
-We scrape activity URLs at 6000 accounts per hour. We index all new activities. Reactions, recasts, watches, and reply counts are updated up to the 50 most recent activities per account. If an activity is deleted, the row disappears from the view.
+We scrape activity URLs at the rate of 6000 accounts per hour. We index all new activities. Reactions, recasts, watches, and reply counts are updated up to the 50 most recent activities per account. If an activity is deleted, the row disappears from the view.
 
 The following fields are available in `activity_view`:
 
 - `id` (not nullable, unique): Primary key of the view
-- `account` (not nullable): ID of the account posted the text
+- `account` (not nullable): ID of the account that posted the text
 - `sequence` (not nullable)
 - `text` (not nullable)
 - `published_at` (not nullable)
