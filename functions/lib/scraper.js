@@ -61,7 +61,7 @@ const getOpengraphFromUrl = async (url) => {
     if (errorMsg) {
       if (PERMANENT_ERRORS.some((msg) => errorMsg.startsWith(msg))) {
         throw new PermanentError(errorMsg)
-      } else if (TEMP_ERRORS.includes(errorMsg)) {
+      } else if (TEMP_ERRORS.some((msg) => errorMsg.startsWith(msg))) {
         throw new TemporaryError(errorMsg)
       }
     }
