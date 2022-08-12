@@ -22,8 +22,11 @@ The following fields are available in `account_view`:
 - `id`: Primary key of the view
 - `address` (not nullable, unique): From Farcaster name registry
 - `username` (not nullable, unique): From Farcaster name registry
-- `display_name` (nullable): From profile API
+- `display_name` (nullable): From directory
 - `avatar_url` (nullable): From directory
+- `bio` (nullable): From profile API
+- `num_followings` (nullable): From profile API
+- `num_followers` (nullable): From profile API
 - `url` (not nullable): Directory URL from Farcaster name registry
 - `activity_url` (nullable) From directory
 - `proof_url` (nullable) From directory
