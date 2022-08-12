@@ -93,6 +93,10 @@ The following fields are available in `activity_opengraph_view`:
 - activity (not nullable, not unique): ID of `activity_view`.
 - opengraph (nullable, not unique): ID of `opengraph_view`.
 
+## Want to contribute?
+
+Check out [some ideas here](https://github.com/lfglabs/farcaster-indexer/issues)
+
 ## Need help?
 
 You can DM me on [Twitter](https://twitter.com/kn).
