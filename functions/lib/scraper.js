@@ -25,6 +25,7 @@ const PERMANENT_ERRORS = [
   'Web server is returning error',
   'Encoding not recognized:',
   'unable to verify the first certificate',
+  'Redirected ', // Redirected 10 times. Aborting.
   'Protocol ', // Protocol not supported
 ]
 // We want to retry if we get these errors.
