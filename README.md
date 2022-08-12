@@ -2,7 +2,7 @@
 
 This software indexes [Farcaster](https://farcaster.xyz) data into a Supabase database. The primary purpose of the database is to serve [Farcaster News](https://www.farcasternews.xyz).
 
-We open up read-only access to the database to the public with the hope of accelerating permissionless innovation on Farcaster Protocol by making it easy to start a new project. We don't provide SLA and strongly encourage you to run your own indexer and database once your project takes off.
+We are opening up read-only access to the database to the public with the hope of accelerating permissionless innovation on Farcaster Protocol by making it easy to start a new project. We don't provide an SLA and strongly encourage you to run your own indexer and database once your project takes off.
 
 ## Accessing our database
 
@@ -15,7 +15,7 @@ Following views are available: `account_view`, `activity_view` and `activity_ope
 
 ### account_view
 
-We check updates to [Farcaster name registry](https://www.farcaster.xyz/docs/the-basics#name-registry) every 5 minutes and reflect user registrations, username transfer, and directory URL changes to our database. We scrape directory, proof, and profile URLs at 4000 accounts per hour rate in case there are updates.
+We check updates to [Farcaster name registry](https://www.farcaster.xyz/docs/the-basics#name-registry) every 5 minutes and reflect user registrations, username transfer, and directory URL changes to our database. We scrape directory, proof, and profile URLs at 4000 accounts per hour in case there are updates.
 
 The following fields are available in `account_view`:
 
@@ -46,7 +46,7 @@ The following fields are available in `account_view`:
 
 ### activity_view
 
-We scrape activity URLs at 6000 accounts per hour rate. We index all new activities. Reactions, recasts, watches, and reply counts are updated up to the 50 most recent activities per account. If an activity is deleted, the row disappears from the view.
+We scrape activity URLs at 6000 accounts per hour. We index all new activities. Reactions, recasts, watches, and reply counts are updated up to the 50 most recent activities per account. If an activity is deleted, the row disappears from the view.
 
 The following fields are available in `activity_view`:
 
