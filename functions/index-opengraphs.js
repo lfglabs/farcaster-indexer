@@ -21,7 +21,12 @@ export const handler = async (event, context) => {
             opengraphsToUpsert.push(opengraph)
           }
         } catch (e) {
-          if (e instanceof scraper.PermanentError) {
+          // Skipping both permanent and temporary errors for now
+          // since we fall back to the opengraphs in the activity
+          if (
+            e instanceof scraper.PermanentError ||
+            e instanceof scraper.TemporaryError
+          ) {
             errors.push(e.message)
             console.warn(
               `Skipping ${url} due to the following error: ${e.message}`
@@ -45,14 +50,6 @@ export const handler = async (event, context) => {
       }
       await db.upsertOpengraphs(activity.id, opengraphsToUpsert)
     } catch (e) {
-      // Simply skip this activity and retry later
-      if (e instanceof scraper.TemporaryError) {
-        errors.push(e.message)
-        console.warn(
-          `Retrying ${activity.id} later due to the following error: ${e.message}`
-        )
-        continue
-      }
       console.error(`Unknown error scraping ${activity.id}: ${e.message}`)
       throw e
     }
