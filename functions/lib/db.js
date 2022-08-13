@@ -7,8 +7,7 @@ const supabase = createClient(
 
 const _checkError = (error) => {
   if (error) {
-    console.error(error)
-    throw new Error(error)
+    throw new Error(error.message)
   }
 }
 
@@ -179,7 +178,24 @@ const markActivitiesAsDeleted = async (accountId, merkleRoots) => {
     .update({ deleted: true })
     .eq('account', accountId) // Only can delete own activities
     .in('merkle_root', merkleRoots)
-  _checkError(error)
+  try {
+    _checkError(error)
+  } catch (error) {
+    // Try break up updates into two requests if URI too long
+    // TODO: This should be a generic function for all batch updates
+    if (error.message?.startsWith('URI too long')) {
+      const breakIndex = Math.floor(merkleRoots.length / 2)
+      if (breakIndex !== 0) {
+        await markActivitiesAsDeleted(
+          accountId,
+          merkleRoots.slice(0, breakIndex)
+        )
+        await markActivitiesAsDeleted(accountId, merkleRoots.slice(breakIndex))
+        return
+      }
+    }
+    throw error
+  }
   if (data.length < merkleRoots.length) {
     console.warn(
       `Could not find ${
