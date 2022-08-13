@@ -6,7 +6,7 @@ We are opening read-only database access to the public with the hope of accelera
 
 ## Accessing our database
 
-You can use [the Supabase client](https://supabase.com/docs/reference/javascript/installing) to access our database with the following config:
+You can use the Supabase [JS client](https://supabase.com/docs/reference/javascript/installing), [Dart client](https://supabase.com/docs/installing), or [REST API](https://supabase.com/docs/guides/api#rest-api-overview) to access our database with the following config:
 
 - Project URL: `https://kpwbglpxjuhiqtgtvenz.supabase.co`
 - API key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwd2JnbHB4anVoaXF0Z3R2ZW56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NTgzNzg2MjEsImV4cCI6MTk3Mzk1NDYyMX0.zecokpSRK0MI_nOaSAgFZJCMkPSpEXraPKqQD5fogE4`
