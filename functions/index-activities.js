@@ -1,12 +1,14 @@
 import db from './lib/db.js'
 import utils from './lib/utils.js'
 
-// Reindex up to most recent 50 activities in case metrics have changed
-const REINDEX_UP_TO_MOST_RECENT = 50
+// Reindex up to most recent 20 activities or 14 days ago in case metrics have changed
+const REINDEX_UP_TO_MOST_RECENT = 20
+const REINDEX_UP_TO_DAYS_AGO = 14
 
 export const handler = async (event, context) => {
   console.log('Start indexing activities')
   const timestampUpdate = { activity_updated_at: new Date().toISOString() }
+  const daysAgoThreshold = utils.getDaysAgoInTime(REINDEX_UP_TO_DAYS_AGO)
   const accountsToUpdate = []
   for (const account of await db.getNextAccountsToUpdateActivity()) {
     const { id, directories, latest_activity_sequence } = account
@@ -32,7 +34,8 @@ export const handler = async (event, context) => {
         if (
           latest_activity_sequence !== null && // Index all if not indexed yet
           sequence <= latest_activity_sequence &&
-          activitiesToUpsert.length >= REINDEX_UP_TO_MOST_RECENT
+          activitiesToUpsert.length >= REINDEX_UP_TO_MOST_RECENT &&
+          activity.published_at < daysAgoThreshold
         ) {
           break
         }

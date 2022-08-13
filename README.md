@@ -46,7 +46,7 @@ The following fields are available in `account_view`:
 
 ### activity_view
 
-We scrape activity URLs at the rate of 6000 accounts per hour. We index all new activities. Reactions, recasts, watches, and reply counts are updated up to the 50 most recent activities per account. If an activity is deleted, the row disappears from the view.
+We scrape activity URLs at the rate of 6000 accounts per hour. We index all new activities. Reactions, recasts, watches, and reply counts are updated up to the 20 most recent activities or posted within the past 2 weeks per account. If an activity is deleted, the row disappears from the view.
 
 The following fields are available in `activity_view`:
 
