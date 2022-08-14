@@ -43,7 +43,14 @@ export const handler = async (event, context) => {
         `Found ${urlsInActivityOpengraphs.length} urls in activity's opengraphs ${activity.id}`
       )
       for (const url of urlsInActivityOpengraphs) {
-        if (!normalizedUrls.has(url.normalized_url)) {
+        // Index only if there is no similar url already extracted from the activity text
+        if (
+          !Array.from(normalizedUrls).some(
+            (nu) =>
+              nu.startsWith(url.normalized_url) ||
+              url.normalized_url.startsWith(nu)
+          )
+        ) {
           normalizedUrls.add(url.normalized_url)
           opengraphsToUpsert.push(url)
         }
