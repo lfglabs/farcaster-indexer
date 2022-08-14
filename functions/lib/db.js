@@ -22,7 +22,7 @@ const _defaultAccountSelect = (fields) => {
 
 // Update 200 accounts at a time to avoid AWS Lambda timeout
 const getNextAccountsToUpdateDirectory = async () => {
-  const { data, error } = await _defaultAccountSelect('id, address, url')
+  const { data, error } = await _defaultAccountSelect('id, url')
     .order('directory_updated_at', { ascending: true, nullsFirst: true })
     .limit(200)
   _checkError(error)

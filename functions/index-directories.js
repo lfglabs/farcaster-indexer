@@ -1,6 +1,5 @@
 import db from './lib/db.js'
 import fc from './lib/farcaster-api.js'
-import crypto from './lib/crypto.js'
 import utils from './lib/utils.js'
 
 const extractAddressFromDirectoryUrl = (url) => {
@@ -18,37 +17,31 @@ export const handler = async (event, context) => {
   const profilesToUpsert = []
   const accountsToUpdate = []
   for (const account of await db.getNextAccountsToUpdateDirectory()) {
-    const { id, address, url } = account
-    accountsToUpdate.push(id)
+    const { id, url } = account
     console.log(`Processing account ${id}`)
     const directory = await utils.fetchWithLog(url)
-    if (!directory) {
-      console.warn(`Could not fetch directory found at ${url}`)
-      continue
-    }
-    if (!crypto.validateDirectorySignature(address, directory)) {
-      console.warn(`Directory signature is invalid for account ${id}`)
-      continue
-    }
-    directoriesToUpsert.push(utils.convertToDbDirectory(id, directory))
-    // Using farcaster address from proof or directory url
-    // because graph lowercases account addresses and the
-    // profile URL is case sensitive.
-    let caseSensitiveAddress
-    const proof = await utils.fetchWithLog(directory.body.proofUrl)
-    if (proof) {
-      proofsToUpsert.push(utils.convertToDbProof(id, proof))
-      caseSensitiveAddress = proof.farcasterAddress
-    } else {
-      proofsToDelete.push(id)
-      caseSensitiveAddress = extractAddressFromDirectoryUrl(url)
-    }
-    if (caseSensitiveAddress) {
-      const profile = await fc.getProfile(caseSensitiveAddress)
-      if (profile) {
-        profilesToUpsert.push(utils.convertToDbProfile(id, profile))
+    if (directory) {
+      directoriesToUpsert.push(utils.convertToDbDirectory(id, directory))
+      // Using farcaster address from proof or directory url
+      // because graph lowercases account addresses and the
+      // profile URL is case sensitive.
+      let caseSensitiveAddress
+      const proof = await utils.fetchWithLog(directory.body.proofUrl)
+      if (proof) {
+        proofsToUpsert.push(utils.convertToDbProof(id, proof))
+        caseSensitiveAddress = proof.farcasterAddress
+      } else {
+        proofsToDelete.push(id)
+        caseSensitiveAddress = extractAddressFromDirectoryUrl(url)
+      }
+      if (caseSensitiveAddress) {
+        const profile = await fc.getProfile(caseSensitiveAddress)
+        if (profile) {
+          profilesToUpsert.push(utils.convertToDbProfile(id, profile))
+        }
       }
     }
+    accountsToUpdate.push(id)
   }
   await db.upsertDirectories(directoriesToUpsert)
   await db.upsertProofs(proofsToUpsert)
