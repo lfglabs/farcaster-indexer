@@ -1,5 +1,6 @@
 import db from './lib/db.js'
 import utils from './lib/utils.js'
+import crypto from './lib/crypto.js'
 
 // Reindex up to most recent 20 activities or 14 days ago in case metrics have changed
 const REINDEX_UP_TO_MOST_RECENT = 20
@@ -11,11 +12,9 @@ export const handler = async (event, context) => {
   const daysAgoThreshold = utils.getDaysAgoInTime(REINDEX_UP_TO_DAYS_AGO)
   const accountsToUpdate = []
   for (const account of await db.getNextAccountsToUpdateActivity()) {
-    const { id, directories, latest_activity_sequence } = account
+    const { id, address, directories, latest_activity_sequence } = account
     accountsToUpdate.push(id)
-    if (!directories.length) {
-      continue
-    }
+    if (!directories.length) continue
     console.log(`Indexing activities for account ${id}`)
     // TODO: https://guardian.farcaster.xyz/origin/address_activity
     // Currently returns up to 5000 latest activities and does not seem to support pagination.
@@ -28,9 +27,17 @@ export const handler = async (event, context) => {
       const activitiesToUpsert = []
       const deletedActivities = {}
       let prevSequence = null
+      let activityValid = true
       for (const rawActivity of activities) {
         const activity = utils.convertToDbActivity(id, rawActivity)
         const { sequence, merkle_root, delete_merkle_root } = activity
+        activityValid = crypto.validateActivitySignature(address, rawActivity)
+        if (!activityValid) {
+          console.warn(
+            `Invalid activity signature for account ${id} at sequence ${sequence}`
+          )
+          break
+        }
         if (
           latest_activity_sequence !== null && // Index all if not indexed yet
           sequence <= latest_activity_sequence &&
@@ -58,9 +65,12 @@ export const handler = async (event, context) => {
         activitiesToUpsert.push(activity)
         prevSequence = sequence
       }
-      // Mark activities that are already in DB as deleted
-      await db.markActivitiesAsDeleted(id, Object.keys(deletedActivities))
-      await db.upsertActivities(activitiesToUpsert)
+      // Skip updating activities if at least one activity is invalid
+      if (activityValid) {
+        // Mark activities that are already in DB as deleted
+        await db.markActivitiesAsDeleted(id, Object.keys(deletedActivities))
+        await db.upsertActivities(activitiesToUpsert)
+      }
     }
   }
   await db.updateAccounts(timestampUpdate, accountsToUpdate)
