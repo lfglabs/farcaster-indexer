@@ -11,7 +11,7 @@ You can use the Supabase [JS client](https://supabase.com/docs/reference/javascr
 - Project URL: `https://kpwbglpxjuhiqtgtvenz.supabase.co`
 - API key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwd2JnbHB4anVoaXF0Z3R2ZW56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NTgzNzg2MjEsImV4cCI6MTk3Mzk1NDYyMX0.zecokpSRK0MI_nOaSAgFZJCMkPSpEXraPKqQD5fogE4`
 
-The following views are available: `account_view`, `activity_view` and `activity_opengraph_view`, `opengraph_view`. Note that we don't currently verify signatures.
+The following views are available: `account_view`, `activity_view` and `activity_opengraph_view`, `opengraph_view`.
 
 ### account_view
 
