@@ -1,6 +1,8 @@
 import db from './lib/db.js'
 import scraper from './lib/scraper.js'
 
+const TWITTER_DOMAINS = ['mobile.twitter.com', 'twitter.com']
+
 export const handler = async (event, context) => {
   console.log('Start indexing urls')
   for (const activity of await db.getNextActivitiesToUpdateIndexOpengraphs()) {
@@ -16,6 +18,15 @@ export const handler = async (event, context) => {
       for (const url of urlsInActivityText) {
         try {
           const opengraph = await scraper.getOpengraphFromUrl(url)
+          if (
+            TWITTER_DOMAINS.includes(opengraph.domain) &&
+            !opengraph.title &&
+            !opengraph.description
+          ) {
+            // We sometimes don't scrape twitter well.
+            // If so we fall back to Farcaster's scraper.
+            continue
+          }
           if (!normalizedUrls.has(opengraph.normalized_url)) {
             normalizedUrls.add(opengraph.normalized_url)
             opengraphsToUpsert.push(opengraph)
