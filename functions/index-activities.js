@@ -36,9 +36,7 @@ export const handler = async (event, context) => {
           console.warn(
             `Invalid activity signature for account ${id} at sequence ${sequence}`
           )
-          throw new Error(
-            `Invalid activity signature for account ${id} at sequence ${sequence}`
-          )
+          break
         }
         if (
           latest_activity_sequence !== null && // Index all if not indexed yet

@@ -35,7 +35,7 @@ For other functions, replace `lambda-index-fc-accounts` and `index-accounts.js` 
 1. Login to AWS ERC:
 
 ```
-aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 985583747716.dkr.ecr.us-east-2.amazonaws.com`
+aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 985583747716.dkr.ecr.us-east-2.amazonaws.com
 ```
 
 2. Build the Docker image:
