@@ -55,12 +55,13 @@ const convertToDbProof = (accountId, proof) => {
 }
 
 const convertToDbProfile = (accountId, profile) => {
-  const { user, followStats } = profile
+  const { user } = profile.result
   return {
     account: accountId,
     bio: user?.profile?.bio?.text || '',
-    num_followers: followStats?.numFollowers || 0,
-    num_following: followStats?.numFollowing || 0,
+    num_followers: user?.followerCount || 0,
+    num_following: user?.followingCount || 0,
+    raw_data: user,
   }
 }
 
