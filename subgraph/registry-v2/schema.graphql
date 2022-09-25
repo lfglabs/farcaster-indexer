@@ -1,0 +1,14 @@
+type Account @entity {
+  id: ID!
+  address: Bytes! # address
+  url: String!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}
+
+type Name @entity {
+  id: ID!
+  address: Bytes! # address
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}

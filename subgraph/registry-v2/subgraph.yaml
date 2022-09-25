@@ -1,0 +1,48 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: IdRegistry
+    network: goerli
+    source:
+      address: "0xDA107A1CAf36d198B12c16c7B6a1d1C795978C42"
+      abi: IdRegistry
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - ChangeHome
+        - Register
+        - Transfer
+      abis:
+        - name: IdRegistry
+          file: ./abis/IdRegistry.json
+      eventHandlers:
+        - event: ChangeHome(indexed uint256,string)
+          handler: handleChangeHome
+        - event: Register(indexed address,indexed uint256,address,string)
+          handler: handleRegister
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+      file: ./src/id-registry.ts
+  - kind: ethereum
+    name: NameRegistry
+    network: goerli
+    source:
+      address: "0xe3Be01D99bAa8dB9905b33a3cA391238234B79D1"
+      abi: NameRegistry
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+      abis:
+        - name: NameRegistry
+          file: ./abis/NameRegistry.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+      file: ./src/name-registry.ts
