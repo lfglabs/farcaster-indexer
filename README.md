@@ -4,6 +4,8 @@ This software indexes [Farcaster](https://farcaster.xyz) data into a Supabase da
 
 We are opening read-only database access to the public with the hope of accelerating permissionless innovation on the Farcaster Protocol by making it easy to start a new project. We don't provide an SLA and strongly encourage you to run your own indexer and database once your project takes off.
 
+IMPORTANT: Our database is no longer up to date since the [Farcaster contract upgrade](https://www.notion.so/Migration-Guide-Phase-I-f34bf0b713924ba6b9652b6bb4fe44ef).
+
 ## Accessing our database
 
 You can use the Supabase [JS client](https://supabase.com/docs/reference/javascript/installing), [Dart client](https://supabase.com/docs/installing), or [REST API](https://supabase.com/docs/guides/api#rest-api-overview) to access our database with the following config:
